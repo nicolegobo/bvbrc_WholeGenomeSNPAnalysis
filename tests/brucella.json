@@ -1,0 +1,8 @@
+{
+    "input_genome_group": "/olson@patricbrc.org/PATRIC-QA/applications/App-WholeGenomeSNPAnalysis/brucella_sp",
+    "majority-threshold": null,
+    "output_path": "/olson@patricbrc.org/PATRIC-QA/applications/App-WholeGenomeSNPAnalysis/",
+    "output_file": "brucella_sp",
+    "input_genome_type": "genome_group",
+    "analysis_type": "Whole Genome SNP Analysis"
+}
