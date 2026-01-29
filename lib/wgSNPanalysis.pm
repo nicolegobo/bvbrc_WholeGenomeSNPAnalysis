@@ -254,13 +254,15 @@ sub save_output_files
     my %suffix_map = (
             txt => 'txt',
             tsv => 'tsv',
+            report => 'tsv',
+            matrix => 'tsv',
             phyloxml => 'phyloxml',
             tre => 'nwk',
             NJ => 'txt',
             ML => 'txt',
             5 => 'tsv',
             vcf => 'vcf',
-            fasta => 'aligned_protein_fasta',
+            fasta => 'aligned_dna_fasta',
             html => 'html');
     my @suffix_map = map { ("--map-suffix", "$_=$suffix_map{$_}") } keys %suffix_map;
 

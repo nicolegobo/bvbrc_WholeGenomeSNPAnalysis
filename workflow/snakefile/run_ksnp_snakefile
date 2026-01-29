@@ -122,8 +122,6 @@ rule convert_trees_to_phyloxml:
         whole_genome_snp_utils convert-to-phyloxml-trees {input.config}
 
         touch {output.touchpoint}
-
-        whole_genome_snp_utils
         """
 
 rule run_kdist_core:
@@ -138,6 +136,8 @@ rule run_kdist_core:
     output:
         dist_matrix = "{}/core_kSNPdist.matrix".format(work_data_dir),
         dist_report = "{}/core_kSNPdist.report".format(work_data_dir),
+        out_dist_matrix = "{}/Core_SNPs/core_kSNPdist.matrix".format(data["output_data_dir"]),
+        out_dist_report = "{}/Core_SNPs/core_kSNPdist.report".format(data["output_data_dir"]),
     shell:
         """
         mkdir -p core_distance_dir 
@@ -148,10 +148,13 @@ rule run_kdist_core:
 
         cd ../
 
-        mv {params.tmp_dist_matrix} {output.dist_matrix}
+        cp {params.tmp_dist_matrix} {output.dist_matrix}
 
-        mv {params.tmp_dist_report} {output.dist_report}
+        cp  {params.tmp_dist_report} {output.dist_report}
+
+        cp {output.dist_matrix} {output.out_dist_matrix}
         
+        cp {output.dist_report} {output.out_dist_report}
         """
 
 rule run_kdist_all:
@@ -166,6 +169,8 @@ rule run_kdist_all:
     output:
         dist_matrix = "{}/all_kSNPdist.matrix".format(work_data_dir),
         dist_report = "{}/all_kSNPdist.report".format(work_data_dir),
+        out_dist_matrix = "{}/All_SNPs/all_kSNPdist.matrix".format(data["output_data_dir"]),
+        out_dist_report = "{}/All_SNPs/all_kSNPdist.report".format(data["output_data_dir"]),
     shell:
         """
         mkdir -p all_distance_dir 
@@ -176,13 +181,17 @@ rule run_kdist_all:
 
         cd ../
 
-        mv {params.tmp_dist_report} {output.dist_report}
+        cp {params.tmp_dist_report} {output.dist_report}
 
-        mv {params.tmp_dist_matrix} {output.dist_matrix}
+        cp {params.tmp_dist_matrix} {output.dist_matrix}
+
+        cp {output.dist_matrix} {output.out_dist_matrix}
+        
+        cp {output.dist_report} {output.out_dist_report}
         
         """
 
-# params because Majority makes it difficult to expect the path
+# params uses because Majority makes it difficult to expect the path
 rule run_kdist_majority:
     input:
         "{}/kSNP_command_touchpoint.txt".format(work_data_dir),
@@ -194,7 +203,9 @@ rule run_kdist_majority:
         tmp_dist_report ="{}/majority_distance_dir/kSNPdist.report".format(current_directory),
     output:
         dist_matrix = "{}/majority_kSNPdist.matrix".format(work_data_dir),
-        dist_report = "{}/majority_kSNPdist.report".format(work_data_dir),      
+        dist_report = "{}/majority_kSNPdist.report".format(work_data_dir),   
+        out_dist_matrix = "{}/Majority_SNPs/majority_kSNPdist.matrix".format(data["output_data_dir"]),
+        out_dist_report = "{}/Majority_SNPs/majority_kSNPdist.report".format(data["output_data_dir"]),   
     shell:
         """
         mkdir -p majority_distance_dir 
@@ -208,6 +219,10 @@ rule run_kdist_majority:
         cp {params.tmp_dist_report} {output.dist_report}
 
         cp {params.tmp_dist_matrix} {output.dist_matrix}
+
+        cp {output.dist_matrix} {output.out_dist_matrix}
+        
+        cp {output.dist_report} {output.out_dist_report}
 
         """
 

@@ -170,6 +170,31 @@ def define_html_template(input_genome_table, barplot_html, snp_distribution_html
                     table#dataTable {{
                         width: 100%;
                     }}
+                    }}
+                    .side-by-side-container {{
+                        border: 1px dashed red;
+                        display: flex;
+                        align-items: center;
+                        flex-wrap: wrap;
+                        gap: 10px;
+                        justify-content: space-between;
+                        align-items: flex-start;
+                    }}
+                    .panel {{
+                        border: 1px solid blue;
+                        background: rgba(0, 0, 255, 0.05);
+                    }}
+                    .panel.heatmap {{
+                        flex: 1 1 50%;
+                        min-width: 350px;
+                     }}
+                    .panel.svgContainer {{
+                            flex: 1 1 50%;
+                            max-width: 100%;
+                            overflow-x auto;
+                            align-items: center;
+                            justify-content: center;
+                    }}
                     th input {{
                         width: 100%;
                         box-sizing: border-box;
@@ -350,57 +375,6 @@ def define_html_template(input_genome_table, barplot_html, snp_distribution_html
             </ul>
             <p>Please visit the kSNP4 documentation for more information about the many trees created by this service.<p>
             {heatmap_html}
-            <h3>Phylogenetic Trees</h3>
-            <div class="controls">
-                <p>
-                View a static image of the trees according to each SNP subset and each tree building method. An interactive view of the tree annotated with metadata is available in the job results in the directory labeled "Trees".
-
-                The website offers an interactive view of the trees with the ability to map metadata directly on the tree through the phylogenetic tree viewer. This is accessible by visiting the files ending with ".tre" or ".phyloxml" in your job results directory.
-                <p>
-                <br>
-                <label>Choose SNP Subset:
-                    <select id="subsetSelector" onchange="updateSVG()">
-                        <option value="SNPs_all">All</option>
-                        <option value="core_SNPs">Core</option>
-                        <option value="SNPs_in_majority{majority_threshold}">Majority</option>
-                    </select>
-                </label>
-                <br>
-                <label>Tree Building Method:
-                    <select id="methodSelector" onchange="updateSVG()">
-                        <option value="ML">Maximum Likelihood</option>
-                        <option value="NJ">Neighbor Joining</option>
-                        <option value="parsimony">Parsimony</option>
-                    </select>
-                </label>
-            </div>
-            <div id="svgContainer" style="margin-top:20px; border: 1px solid #ccc; padding: 10px;">
-                <!-- SVG will be loaded here -->
-            </div>
-             <script>
-            function updateSVG() {{
-                const data_input = document.getElementById('subsetSelector').value;
-                const method = document.getElementById('methodSelector').value;
-                const svgPath = `report_supporting_documents/tree.${{data_input}}.${{method}}.tre.svg`;
-                console.log(svgPath)
-                // Load the SVG
-                fetch(svgPath)
-                    .then(response => {{
-                        if (!response.ok) {{
-                            throw new Error('SVG not found');
-                        }}
-                        return response.text();
-                    }})
-                    .then(svgContent => {{
-                        document.getElementById('svgContainer').innerHTML = svgContent;
-                    }})
-                    .catch(error => {{
-                        document.getElementById('svgContainer').innerHTML = `<p style="color:black;">Error loading SVG: Ensure the directory "report_supporting_documents" is in the same workspace directory as this report file. If so check if the specific tree exists within the out directory. Depending on your input data the tree method may be unable to generate a tree for a given subset.</p>`;
-                    }});
-                }}
-            // Initial load
-            updateSVG();
-            </script>
             <h3>References</h3>
 
             <ol type="1">
@@ -414,7 +388,7 @@ def define_html_template(input_genome_table, barplot_html, snp_distribution_html
     return html_template
 
 
-def interactive_threshold_heatmap(service_config, metadata_json):
+def interactive_threshold_heatmap(service_config, metadata_json, majority_threshold):
     with open(service_config) as file:
         data = json.load(file)
     work_dir = data["work_data_dir"]
@@ -456,8 +430,9 @@ def interactive_threshold_heatmap(service_config, metadata_json):
      Hover over the plot to view the SNP distance value and metadata. <p>
          <div class="heatmap-controls">
      <h4>Filter and Sort the Data:</h4>
+     <!-- nb dev -->
         <label>Choose SNP Subset:
-        <select id="matrixSelector" onchange="recolorHeatmap()">
+        <select id="matrixSelector" onchange="recolorHeatmap(); updateSVG();">
             <option value="1">All SNPs</option>
             <option value="2">Core SNPs</option>
             <option value="3">Majority SNPs</option>
@@ -468,10 +443,17 @@ def interactive_threshold_heatmap(service_config, metadata_json):
             <!-- options populated dynamically -->
         </select>
         </label>
+        <label>Choose Tree Building Method:
+            <select id="methodSelector" onchange="updateSVG()">
+                <option value="ML">Maximum Likelihood</option>
+                <option value="NJ">Neighbor Joining</option>
+                <option value="parsimony">Parsimony</option>
+            </select>
+        </label>
         </div>
         <div class="linkage-controls" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
         <h4>Recolor Heatmap According to Linkage Thresholds:</h4>
-        <label>Weak Linkage Thresholds:
+        <label>Strong Linkage Thresholds:
         <input type="number" id="t0" value="0" disabled style="width: 40px;">
         <input type="number" id="t1a" value="10" style="width: 40px;">
         </label>
@@ -481,7 +463,7 @@ def interactive_threshold_heatmap(service_config, metadata_json):
         <input type="number" id="t2a" value="40" style="width: 40px;">
         </label>
 
-        <label>Strong Linkage Thresholds:
+        <label>Weak Linkage Thresholds:
         <input type="number" id="t2b" value="40" style="width: 40px;">
         <input type="number" id="t3" placeholder="Max" disabled style="width: 40px;">
         </label>
@@ -489,9 +471,12 @@ def interactive_threshold_heatmap(service_config, metadata_json):
         <button style="padding: 8px 8px; font-size: 14px;" onclick="recolorHeatmap()">Recolor</button>
         </div>
     </div>
-    <div class="plot-container">
-    <div class="plot" id="heatmap" style="width: 800px; height: 800px;"></div>
-    <!-- <div class="plot" id="heatmap" style="width: 800px; height: 800px;"></div> -->
+    <!-- <div class="plot-container"> -->
+    <div class="side-by-side-container">
+    <div class="panel" id="heatmap"></div>
+    <div class="panel" id="svgContainer">
+    <!-- SVG will be loaded here -->
+    </div>
     </div>
     <script>
         // ===== Embedded data placeholders =====
@@ -510,6 +495,7 @@ def interactive_threshold_heatmap(service_config, metadata_json):
             const t2a = document.getElementById('t2a');
             const t2b = document.getElementById('t2b');
 
+            // make sure T1 ≤ T2
             function validateThresholds() {{
                 const t1 = parseFloat(t1a.value);
                 const t2 = parseFloat(t2a.value);
@@ -521,6 +507,7 @@ def interactive_threshold_heatmap(service_config, metadata_json):
                     t1a.value = t2;
                     t1b.value = t2;
                 }}
+                recolorHeatmap();
             }}
 
             t1a.addEventListener('input', () => {{
@@ -713,8 +700,53 @@ def interactive_threshold_heatmap(service_config, metadata_json):
         Plotly.newPlot('heatmap', data, layout);
         }}
 
+        // Tree selection
+        // ===== Tree selection =====
+        // nb dev
+        <!-- keeping its on function for better reusability NB July 2025 -->
+        function updateSVG() {{
+                // this is from above 
+                // const selected = document.getElementById('matrixSelector').value;
+                const data_input = document.getElementById('matrixSelector').value;
+                const method = document.getElementById('methodSelector').value;
+                let tree_type = document.getElementById('methodSelector').value;
+                
+                
+                console.log(data_input);
+                console.log("nicole here");
+
+                // Map input from heatmap selection to filepath for images
+                const fp_map = {{
+                "1": "SNPs_all",
+                "2": "core_SNPs",
+                "3": "SNPs_in_majority{majority_threshold}"
+                }};
+
+                if (fp_map[data_input]) {{
+                    tree_type = fp_map[data_input];
+                    }}
+
+                console.log(tree_type);
+                const svgPath = `report_supporting_documents/tree.${{tree_type}}.${{method}}.tre.svg`;
+                console.log(svgPath);
+                // Load the SVG
+                fetch(svgPath)
+                    .then(response => {{
+                        if (!response.ok) {{
+                            throw new Error('SVG not found');
+                        }}
+                        return response.text();
+                    }})
+                    .then(svgContent => {{
+                        document.getElementById('svgContainer').innerHTML = svgContent;
+                    }})
+                    .catch(error => {{
+                        document.getElementById('svgContainer').innerHTML = `<p style="color:black;">Error loading SVG: Ensure the directory "report_supporting_documents" is in the same workspace directory as this report file. If so check if the specific tree exists within the out directory. Depending on your input data the tree method may be unable to generate a tree for a given subset.</p>`;
+                    }});
+                }}
         // Initial render
         recolorHeatmap();
+        updateSVG();
         </script>
     """.format(
     all_genome_ids=all_genome_ids,
@@ -723,7 +755,8 @@ def interactive_threshold_heatmap(service_config, metadata_json):
     core_snpMatrix=core_snpMatrix,
     majority_genome_ids=majority_genome_ids,
     majority_snpMatrix=majority_snpMatrix,
-    metadata_json_string=metadata_json_string
+    metadata_json_string=metadata_json_string,
+    majority_threshold=majority_threshold,
     )
     return heatmap_template, metadata_json_string
 
@@ -1263,7 +1296,7 @@ def write_html_report(service_config, html_report_path):
     snp_distribution_html = make_genome_bar_chart(data, report_data, majority_threshold)
     input_genome_table = generate_table_html_2(kchooser_df, table_width='75%')
     # SNP Counts 
-    heatmap_html, metadata_json_string = interactive_threshold_heatmap(service_config, metadata_json)
+    heatmap_html, metadata_json_string = interactive_threshold_heatmap(service_config, metadata_json, majority_threshold)
     html_template = define_html_template(input_genome_table, barplot_html, snp_distribution_html, \
                     homoplastic_snps_html, heatmap_html, \
                     majority_threshold, metadata_json_string)
