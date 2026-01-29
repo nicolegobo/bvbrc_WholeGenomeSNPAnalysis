@@ -260,7 +260,7 @@ sub save_output_files
             ML => 'txt',
             5 => 'tsv',
             vcf => 'vcf',
-            fasta => 'contigs',
+            fasta => 'aligned_protein_fasta',
             html => 'html');
     my @suffix_map = map { ("--map-suffix", "$_=$suffix_map{$_}") } keys %suffix_map;
 
