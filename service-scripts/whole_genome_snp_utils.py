@@ -478,6 +478,23 @@ def interactive_threshold_heatmap(service_config, metadata_json, majority_thresh
     <!-- SVG will be loaded here -->
     </div>
     </div>
+
+    <!-- Genome comparison panel (appears on cell click) -->
+    <div id="comparisonPanel" style="display:none; margin-top:18px; border:1px solid #ccc;
+         border-radius:6px; padding:16px; background:#fafafa;">
+      <h3 id="comparisonTitle" style="margin-top:0;"></h3>
+      <div style="display:flex; gap:24px; flex-wrap:wrap;">
+        <div style="flex:1; min-width:220px;">
+          <h4 id="genome1Label" style="margin-bottom:6px;"></h4>
+          <table id="meta1Table" style="width:100%; border-collapse:collapse;"></table>
+        </div>
+        <div style="flex:1; min-width:220px;">
+          <h4 id="genome2Label" style="margin-bottom:6px;"></h4>
+          <table id="meta2Table" style="width:100%; border-collapse:collapse;"></table>
+        </div>
+      </div>
+    </div>
+
     <script>
         // ===== Embedded data placeholders =====
         const genomeLabels1 = {all_genome_ids};
@@ -487,6 +504,14 @@ def interactive_threshold_heatmap(service_config, metadata_json, majority_thresh
         const genomeLabels3 = {majority_genome_ids};
         const snpMatrix3     = {majority_snpMatrix};
         const metadata      = {metadata_json_string};
+
+        // Build lookup once: genome_id → metadata object
+        const idToMeta = {{}};
+        metadata.forEach(obj => {{ idToMeta[obj.genome_id] = obj; }});
+
+        // Track current display state for click handler
+        let currentLabels = [];
+        let currentMatrix = [];
 
         // ===== Map linkage thresholds =====
         function syncThresholdInputs() {{
@@ -610,6 +635,48 @@ def interactive_threshold_heatmap(service_config, metadata_json, majority_thresh
         return {{ newLabels, newMatrix }};
         }}
 
+        // ===== Render a metadata table into a <table> element =====
+        function renderMetaTable(tableEl, metaObj) {{
+          tableEl.innerHTML = '';
+          for (const [field, val] of Object.entries(metaObj)) {{
+            const tr  = document.createElement('tr');
+            const tdK = document.createElement('td');
+            const tdV = document.createElement('td');
+            tdK.style.cssText = 'padding:4px 8px 4px 0; font-weight:bold; white-space:nowrap; vertical-align:top;';
+            tdV.style.cssText = 'padding:4px 0; vertical-align:top;';
+            tdK.textContent = field;
+            tdV.textContent = val;
+            tr.appendChild(tdK);
+            tr.appendChild(tdV);
+            tableEl.appendChild(tr);
+          }}
+        }}
+
+        // ===== Handle heatmap cell click → show comparison panel =====
+        function onHeatmapClick(eventData) {{
+          if (!eventData || !eventData.points || eventData.points.length === 0) return;
+          const pt  = eventData.points[0];
+          const id1 = pt.y;
+          const id2 = pt.x;
+          const i1  = currentLabels.indexOf(id1);
+          const i2  = currentLabels.indexOf(id2);
+          const dist = (i1 >= 0 && i2 >= 0) ? currentMatrix[i1][i2] : '';
+
+          const meta1 = idToMeta[id1] || {{ genome_id: id1 }};
+          const meta2 = idToMeta[id2] || {{ genome_id: id2 }};
+
+          document.getElementById('comparisonTitle').textContent = `SNP Distance: ${{dist}}`;
+          document.getElementById('genome1Label').innerHTML = `<a href="https://www.bv-brc.org/view/Genome/${{id1}}" target="_blank">${{id1}}</a>`;
+          document.getElementById('genome2Label').innerHTML = `<a href="https://www.bv-brc.org/view/Genome/${{id2}}" target="_blank">${{id2}}</a>`;
+
+          renderMetaTable(document.getElementById('meta1Table'), meta1);
+          renderMetaTable(document.getElementById('meta2Table'), meta2);
+
+          const panel = document.getElementById('comparisonPanel');
+          panel.style.display = 'block';
+          panel.scrollIntoView({{ behavior: 'smooth', block: 'nearest' }});
+        }}
+
         // ===== Main function to draw/update heatmap =====
         function recolorHeatmap() {{
         const t1 = parseInt(document.getElementById('t1a').value);
@@ -642,12 +709,6 @@ def interactive_threshold_heatmap(service_config, metadata_json, majority_thresh
         const bins = snpMatrix.map(row =>
             row.map(val => assignBin(val, t1, t2, maxVal))
         );
-
-        // Build a lookup: genome_id → metadata object
-        const idToMeta = {{}};
-        metadata.forEach(obj => {{
-            idToMeta[obj.genome_id] = obj;
-        }});
 
         // Build hoverText including all metadata fields
         const hoverText = snpMatrix.map((row, i) =>
@@ -697,7 +758,10 @@ def interactive_threshold_heatmap(service_config, metadata_json, majority_thresh
             yaxis: {{ tickangle: 45 }}
         }};
 
+        currentLabels = genomeLabels;
+        currentMatrix = snpMatrix;
         Plotly.newPlot('heatmap', data, layout);
+        document.getElementById('heatmap').on('plotly_click', onHeatmapClick);
         }}
 
         // Tree selection

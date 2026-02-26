@@ -4,5 +4,5 @@
     "output_path": "/olson@patricbrc.org/PATRIC-QA/applications/App-CoreGenomeMLST",
     "output_file": "core_genome_MLST_3_genome_run",
     "input_genome_type": "genome_group",
-    "analysis_type": "chewbbaca"
+    "analysis_type": "Whole Genome SNP Analysis"
 }
