@@ -1,5 +1,5 @@
 {
-    "input_genome_group": "/olson@patricbrc.org/PATRIC-QA/applications/App-WholeGenomeSNPAnalysis/Burkholderia_mallei_horse",
+    "input_genome_group": "/olson@patricbrc.org/PATRIC-QA/applications/App-WholeGenomeSNPAnalysis/Burkholderia_horse_europe",
     "majority-threshold": null,
     "output_path": "/olson@patricbrc.org/PATRIC-QA/applications/App-WholeGenomeSNPAnalysis/",
     "output_file": "Burkholderia_mallei_horse",

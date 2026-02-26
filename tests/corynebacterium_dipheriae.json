@@ -1,5 +1,5 @@
 {
-    "input_genome_group": "/olson@patricbrc.org/PATRIC-QA/applications/App-WholeGenomeSNPAnalysis/Corynebacterium_diphtheriae_uk",
+    "input_genome_group": "/olson@patricbrc.org/PATRIC-QA/applications/App-WholeGenomeSNPAnalysis/Corynebacterium_diphtheriae_uk_genome_group",
     "majority-threshold": null,
     "output_path": "/olson@patricbrc.org/PATRIC-QA/applications/App-WholeGenomeSNPAnalysis/",
     "output_file": "Corynebacterium_diphtheriae_uk",

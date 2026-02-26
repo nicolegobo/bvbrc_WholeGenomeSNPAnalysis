@@ -1,5 +1,5 @@
 {
-    "input_genome_group": "/olson@patricbrc.org/PATRIC-QA/applications/App-WholeGenomeSNPAnalysis/brucella_sp",
+    "input_genome_group": "/olson@patricbrc.org/PATRIC-QA/applications/App-WholeGenomeSNPAnalysis/39_Brucella_genomes",
     "majority-threshold": null,
     "output_path": "/olson@patricbrc.org/PATRIC-QA/applications/App-WholeGenomeSNPAnalysis/",
     "output_file": "brucella_sp",
